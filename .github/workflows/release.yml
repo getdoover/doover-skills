@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  validate-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace
+        run: claude plugin validate .
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Verify version matches plugin.json
+        run: |
+          PLUGIN_VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          # Strip 'v' prefix from tag for comparison
+          TAG_VERSION_NUM="${TAG_VERSION#v}"
+          if [ "$PLUGIN_VERSION" != "$TAG_VERSION_NUM" ]; then
+            echo "WARNING: plugin.json version ($PLUGIN_VERSION) doesn't match tag ($TAG_VERSION_NUM)"
+            echo "Consider updating plugin.json version before release"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            Add this marketplace to Claude Code:
+            ```
+            /plugin marketplace add ${{ github.repository }}
+            ```
+
+            Install the plugin:
+            ```
+            /plugin install doover-development@doover-skills
+            ```
+
+            ## What's Changed
+            See the automatically generated release notes below.

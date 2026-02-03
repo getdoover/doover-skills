@@ -1,0 +1,30 @@
+{
+  "name": "doover-skills",
+  "owner": {
+    "name": "Doover",
+    "email": "support@doover.com"
+  },
+  "metadata": {
+    "description": "Claude Skills for Doover platform development",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "doover-development",
+      "description": "Skills for developing Doover applications",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/doover",
+        "./skills/doover-app-workflow",
+        "./skills/doover-device-apps",
+        "./skills/doover-cloud-apps",
+        "./skills/doover-cli",
+        "./skills/doover-data-management",
+        "./skills/doover-admin",
+        "./skills/pydoover",
+        "./skills/doover-app-explorer"
+      ]
+    }
+  ]
+}

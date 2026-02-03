@@ -1,0 +1,48 @@
+name: Validate Plugins
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace structure
+        run: claude plugin validate .
+
+      - name: Check JSON syntax
+        run: |
+          echo "Validating JSON files..."
+          for file in $(find . -name "*.json" -not -path "./.git/*"); do
+            echo "Checking $file"
+            jq empty "$file" || exit 1
+          done
+          echo "All JSON files are valid"
+
+      - name: Verify skill files exist
+        run: |
+          echo "Verifying all referenced skills exist..."
+          skills=$(jq -r '.plugins[].skills[]?' .claude-plugin/marketplace.json 2>/dev/null || echo "")
+          for skill in $skills; do
+            skill_path="${skill}/SKILL.md"
+            if [ ! -f "$skill_path" ]; then
+              echo "ERROR: Missing skill file: $skill_path"
+              exit 1
+            fi
+            echo "Found: $skill_path"
+          done
+          echo "All referenced skills exist"

@@ -1,0 +1,9 @@
+{
+  "name": "doover-skills",
+  "description": "Claude Skills for Doover platform development",
+  "version": "1.0.0",
+  "author": {
+    "name": "Doover",
+    "email": "support@doover.com"
+  }
+}
