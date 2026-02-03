@@ -95,7 +95,14 @@ zip -rq package.zip src
 echo "OK"
 ```
 
-This exports locked dependencies, installs them for the Lambda runtime platform, zips the installed packages, then adds your `src` tree. Ensure the script is executable (`chmod +x build.sh`). Run it before publishing so the correct `package.zip` is used.
+This exports locked dependencies, installs them for the Lambda runtime platform, zips the installed packages, then adds your `src` tree. Ensure the script is executable (`chmod +x build.sh`). Add the build outputs to `.gitignore` so they are not committed:
+
+```
+packages_export/
+package.zip
+```
+
+Run the script before publishing so the correct `package.zip` is used.
 
 ## Handler Entry Point
 

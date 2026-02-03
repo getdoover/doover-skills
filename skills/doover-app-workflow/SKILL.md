@@ -176,6 +176,13 @@ zip -rq package.zip src
 echo "OK"
 ```
 
+Add `packages_export` and `package.zip` to `.gitignore` so the build output is not committed:
+
+```
+packages_export/
+package.zip
+```
+
 Run this script to generate `package.zip` for publishing. See the `doover-cloud-apps` skill for more on cloud app structure and deployment.
 
 ## Step 3: Configure Project
