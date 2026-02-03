@@ -104,6 +104,8 @@ package.zip
 
 Run the script before publishing so the correct `package.zip` is used.
 
+If you created the project from the app template, you can remove the build-image workflow from `.github/workflows/` (the one that builds Docker images). Processors and integrations deploy as zip packages, not container images, so that workflow is not needed.
+
 ## Handler Entry Point
 
 Both processors and integrations use the same handler pattern:

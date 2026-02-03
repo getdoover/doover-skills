@@ -185,6 +185,8 @@ package.zip
 
 Run this script to generate `package.zip` for publishing. See the `doover-cloud-apps` skill for more on cloud app structure and deployment.
 
+**Remove the build-image workflow (processors/integrations only):** Cloud apps are deployed as zip packages, not container images. You can remove the build-image workflow from the template (e.g. delete or disable the workflow file in `.github/workflows/` that builds Docker images) so CI does not build images for processors and integrations.
+
 ## Step 3: Configure Project
 
 After creating the project from the template, configure it for your organization.
@@ -603,12 +605,9 @@ doover app publish --skip-container
 
 ### GitHub Actions
 
-The template includes GitHub Actions workflows that:
-1. Build Docker images on push/release
-2. Push to configured container registry
-3. Support multi-platform builds (amd64, arm64)
+**Device apps:** The template may include a build-image workflow that builds Docker images on push/release, pushes to the configured container registry, and supports multi-platform builds (amd64, arm64). Check `.github/workflows/` for the workflow configuration.
 
-Check `.github/workflows/` for the workflow configuration.
+**Processors and integrations:** Cloud apps are deployed as zip packages, not images. You can remove the build-image workflow from `.github/workflows/` so CI does not build Docker images for these app types.
 
 ### Verify Deployment
 
