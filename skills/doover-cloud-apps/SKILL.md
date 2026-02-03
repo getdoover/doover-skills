@@ -47,6 +47,7 @@ my-processor/
 │   ├── app_config.py     # Configuration schema
 │   └── app_ui.py         # UI components (optional)
 ├── doover_config.json    # App metadata
+├── build.sh              # Build script for deployment package (see below)
 └── pyproject.toml
 ```
 
@@ -59,8 +60,42 @@ my-integration/
 │   ├── application.py    # Main application logic
 │   └── app_config.py     # Configuration schema
 ├── doover_config.json    # App metadata
+├── build.sh              # Build script for deployment package (see below)
 └── pyproject.toml
 ```
+
+### Build script (deployment package)
+
+Processors and integrations are deployed as a zip package. Add a build script to the project root (e.g. `build.sh`) and run it to produce `package.zip` for publishing:
+
+```sh
+#!/bin/sh
+
+uv export --frozen --no-dev --no-editable --quiet -o requirements.txt
+
+uv pip install \
+   --no-deps \
+   --no-installer-metadata \
+   --no-compile-bytecode \
+   --python-platform x86_64-manylinux2014 \
+   --python 3.13 \
+   --quiet \
+   --target packages_export \
+   --refresh \
+   -r requirements.txt
+
+rm -f package.zip
+
+cd packages_export
+zip -rq ../package.zip .
+cd ..
+
+zip -rq package.zip src
+
+echo "OK"
+```
+
+This exports locked dependencies, installs them for the Lambda runtime platform, zips the installed packages, then adds your `src` tree. Ensure the script is executable (`chmod +x build.sh`). Run it before publishing so the correct `package.zip` is used.
 
 ## Handler Entry Point
 

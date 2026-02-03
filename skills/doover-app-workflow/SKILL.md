@@ -147,6 +147,37 @@ cd my-app-name
 mv src/app_template src/my_app_name
 ```
 
+**Add the cloud app build script (processors/integrations only):** When creating a processor or integration from the template, add a build script that produces the deployment package. Create a file (e.g. `build.sh`) in the project root with execute permission and the following contents:
+
+```sh
+#!/bin/sh
+
+uv export --frozen --no-dev --no-editable --quiet -o requirements.txt
+
+uv pip install \
+   --no-deps \
+   --no-installer-metadata \
+   --no-compile-bytecode \
+   --python-platform x86_64-manylinux2014 \
+   --python 3.13 \
+   --quiet \
+   --target packages_export \
+   --refresh \
+   -r requirements.txt
+
+rm -f package.zip
+
+cd packages_export
+zip -rq ../package.zip .
+cd ..
+
+zip -rq package.zip src
+
+echo "OK"
+```
+
+Run this script to generate `package.zip` for publishing. See the `doover-cloud-apps` skill for more on cloud app structure and deployment.
+
 ## Step 3: Configure Project
 
 After creating the project from the template, configure it for your organization.
@@ -171,12 +202,29 @@ You'll need:
 # For now, contact your Doover administrator or check the admin panel
 ```
 
-Update `doover_config.json`:
+### doover_config.json field reference
+
+`doover_config.json` holds one entry per app (keyed by app name). Set these fields when configuring a new project:
+
+| Field | Who sets it | Notes |
+|-------|-------------|--------|
+| **key** (app key) | **Do not set or edit manually.** Only `doover app publish` updates this. | For a new app, leave it absent or empty; the first `doover app publish` will create and set the app key correctly on the platform and in config. For existing apps, the key identifies the app on Doover—never replace it by hand. |
+| **name** | You | Internal app name (e.g. `my_app_name`), must match the config key and package. |
+| **display_name** | You | Human-readable name shown in the admin UI. |
+| **type** | You | e.g. `DEV`. |
+| **visibility** | You | e.g. `PRI` or `PUB`. |
+| **owner_org_key** | You | Your organization's UUID. |
+| **image_name** | You | Full image ref (e.g. `ghcr.io/your-org/my-app-name`). |
+| **container_registry_profile_key** | You | Registry profile UUID for pushing images. |
+| **build_args** | You (optional) | e.g. `--platform linux/amd64,linux/arm64`. |
+
+**App key and id fields:** The **key** field is the app’s unique identifier on Doover. Do not generate or paste a UUID into it. Only run `doover app publish`; it will create the app (if new) and set or keep the app key correct in `doover_config.json`. Manually changing the app key can break linkage between your repo and the published app.
+
+Update `doover_config.json` with the fields you control (omit or leave **key** unset for a new app):
 
 ```json
 {
   "my_app_name": {
-    "key": "generate-new-uuid-here",
     "name": "my_app_name",
     "display_name": "My App Name",
     "type": "DEV",
@@ -189,10 +237,7 @@ Update `doover_config.json`:
 }
 ```
 
-Generate a new UUID for the app key:
-```bash
-python3 -c "import uuid; print(uuid.uuid4())"
-```
+After the first successful `doover app publish`, the **key** field will be added or updated by the CLI; do not edit it afterward.
 
 ### Set Up Development Environment
 
