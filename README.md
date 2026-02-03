@@ -122,6 +122,36 @@ Invoke skills in Claude Code by asking questions about Doover development:
 - "Find apps that work with Modbus"
 - "I need a Doover app that pushes tag data to Power BI"
 
+## CI/CD
+
+This repository uses GitHub Actions for continuous integration and deployment.
+
+### Validation Workflow
+
+Runs on every push and pull request to `main`:
+
+- Validates marketplace plugin structure using `claude plugin validate`
+- Checks JSON syntax for all JSON files
+- Verifies all referenced skill files exist
+
+### Release Workflow
+
+Runs when a version tag is pushed (e.g., `v1.0.0`):
+
+- Validates the marketplace structure
+- Verifies the tag version matches `plugin.json`
+- Creates a GitHub Release with installation instructions
+
+### Creating a Release
+
+1. Update the version in `.claude-plugin/plugin.json`
+2. Commit and push to `main`
+3. Create and push a version tag:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
 ## Resources
 
 - [Doover Platform](https://doover.com)
