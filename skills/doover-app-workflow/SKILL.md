@@ -226,6 +226,8 @@ You'll need:
 | **image_name** | You | Full image ref (e.g. `ghcr.io/your-org/my-app-name`). |
 | **container_registry_profile_key** | You | Registry profile UUID for pushing images. |
 | **build_args** | You (optional) | e.g. `--platform linux/amd64,linux/arm64`. |
+| **icon_url** | You (optional) | url to an icon image
+| **banner_url** | you (optional) | url to a banner image
 
 **App key and id fields:** The **key** field is the app’s unique identifier on Doover. Do not generate or paste a UUID into it. Only run `doover app publish`; it will create the app (if new) and set or keep the app key correct in `doover_config.json`. Manually changing the app key can break linkage between your repo and the published app.
 
@@ -247,6 +249,8 @@ Update `doover_config.json` with the fields you control (omit or leave **key** u
 ```
 
 After the first successful `doover app publish`, the **key** field will be added or updated by the CLI; do not edit it afterward.
+
+Where the app might be associated with a brand or trademark or similar, then both the icon and the banner should reflect that. The icon_url must be an icon that will primarily be shown as 64x64px, the banner image will be shown as max_height=100px and max_width=800px. Both will ideally have transparent backgrounds or white background as a backup. Please search the internet for suitable icons and banners at app creation.
 
 ### Set Up Development Environment
 
