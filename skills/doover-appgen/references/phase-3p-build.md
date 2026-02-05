@@ -175,6 +175,17 @@ uv sync
 uv run python -c "from {app_name} import handler; print('Import OK')"
 ```
 
+### Step 9: Validate Config Schema
+
+Run the config schema export to validate the configuration setup:
+
+```bash
+cd {app-directory}
+doover config-schema export
+```
+
+This command validates that the config schema is properly defined and can be exported. If it fails, check your `app_config.py` for errors.
+
 ## State Updates
 
 After successful code generation, update `.appgen/PHASE.md`:
@@ -193,6 +204,7 @@ Phase 3 is complete when:
 - [ ] `doover_config.json` has `type: "PRO"` and `lambda_config`
 - [ ] `build.sh` script is created
 - [ ] Code imports successfully
+- [ ] `doover config-schema export` runs without errors
 - [ ] `.appgen/PHASE.md` updated with status "completed"
 
 ## Summary for Orchestrator

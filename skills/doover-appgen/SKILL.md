@@ -30,6 +30,7 @@ skills/doover-appgen/
     ├── phase-3d-build.md         # Phase 3: Docker build
     ├── phase-3p-build.md         # Phase 3: Processor build
     ├── phase-3i-build.md         # Phase 3: Integration build
+    ├── phase-4-document.md       # Phase 4: Documentation (all app types)
     ├── mini-docs-docker.md       # Docker device app development guide
     ├── mini-docs-processor.md    # Processor development guide
     └── mini-docs-integration.md  # Integration development guide
@@ -64,6 +65,7 @@ The `.appgen/PHASE.md` file tracks:
 | 3d | Docker Build | Generate Docker device application code |
 | 3p | Processor Build | Generate cloud processor code |
 | 3i | Integration Build | Generate cloud integration code |
+| 4 | Document | Generate comprehensive README.md documentation |
 
 Phase 2 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-2d-config.md
@@ -234,6 +236,37 @@ Task tool with:
        - Files created/modified
        - What the app does
        - Known limitations
+       - Any errors
+```
+
+**Phase 4 Subagent Invocation:**
+
+Phase 4 is shared by all app types - there is no variant selection needed.
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 4 of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app details (name, description, type, GitHub URL, icon URL)
+    2. Read {skill-path}/references/phase-4-document.md for instructions
+    3. Read the application code to understand what it does:
+       - {app-dir}/doover_config.json for configuration schema
+       - {app-dir}/src/{app_name}/application.py for core functionality
+       - {app-dir}/src/{app_name}/app_config.py for config options
+       - {app-dir}/src/{app_name}/app_ui.py for UI elements (if present)
+    4. Generate a comprehensive README.md following the template in phase-4-document.md
+    5. Include all required sections: Overview, Features, Getting Started, Configuration, Tags/UI, How It Works, etc.
+    6. Update {app-dir}/.appgen/PHASE.md with completion status
+    7. Return a summary including:
+       - README sections generated
+       - Configuration items documented
+       - Tags/UI elements documented
        - Any errors
 ```
 

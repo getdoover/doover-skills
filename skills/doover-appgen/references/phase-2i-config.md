@@ -28,7 +28,7 @@ Your job: Configure the template, then return a summary.
 Read `{app-directory}/.appgen/PHASE.md` to get:
 - App name (e.g., `my_integration`)
 - App description
-- `icon_url` and `banner_url`
+- `icon_url`
 - Note: `has_ui` is always false for integrations
 
 ### Step 2: Remove UI Components
@@ -51,18 +51,18 @@ This prevents CI from building unnecessary Docker images for cloud apps.
 
 ### Step 4: Validate Image URLs
 
-Before applying the image URLs to doover_config.json, validate that they are accessible and return valid images.
+Before applying the icon URL to doover_config.json, validate that it is accessible and returns a valid image.
 
 **Validation process:**
 
-For each URL (`icon_url` and `banner_url`):
+For the `icon_url`:
 1. Make an HTTP HEAD or GET request to the URL using `curl -sI {url}` or `WebFetch`
 2. Check that the response status is 200 OK
 3. Optionally verify the Content-Type header contains `image/` (e.g., `image/svg+xml`, `image/png`)
 
 **If validation fails:**
 - Use `AskUserQuestion` to prompt the user for a replacement URL
-- Explain which URL failed and why
+- Explain that the URL failed and why
 - Re-validate the new URL before proceeding
 
 **Example validation command:**
@@ -102,7 +102,6 @@ The app-template's `doover_config.json` needs to be transformed for integration 
         "repo_branch": "main",
         "image_name": null,
         "icon_url": "{icon_url from PHASE.md}",
-        "banner_url": "{banner_url from PHASE.md}",
         "staging_config": {},
         "export_config_command": null,
         "run_command": null,
@@ -136,9 +135,9 @@ Phase 2 is complete when:
 - [ ] `app_ui.py` removed
 - [ ] `application.py` updated to remove UI imports/code (if any)
 - [ ] `.github/workflows/build-image.yml` removed (if present)
-- [ ] Image URLs validated (return 200 OK)
+- [ ] Icon URL validated (returns 200 OK)
 - [ ] `doover_config.json` restructured for integration (type: "INT", lambda_config, etc.)
-- [ ] `doover_config.json` has validated `icon_url` and `banner_url` set
+- [ ] `doover_config.json` has validated `icon_url` set
 - [ ] `doover_config.json` does NOT have an `id` field
 - [ ] `.appgen/PHASE.md` updated with status "completed"
 

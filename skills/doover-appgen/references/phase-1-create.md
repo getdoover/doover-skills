@@ -102,26 +102,25 @@ After both commands complete:
 3. Verify the GitHub repo was created (check `git remote -v`)
 4. Note the full local path and GitHub URL
 
-### Step 6: Find Brand Images
+### Step 6: Find Brand Icon
 
-The app needs an icon and banner image for display in the Doover admin UI. Based on the app name and description, attempt to identify a brand or service associated with the app.
+The app needs an icon image for display in the Doover admin UI. Based on the app name and description, attempt to identify a brand or service associated with the app.
 
 **Image requirements:**
-- **Icon:** Will be displayed at 64x64px. Should have a transparent or white background.
-- **Banner:** Will be displayed at max 800px wide x 100px tall. Should have a transparent or white background.
+- **Icon:** Will be displayed at 64x64px. Should have a transparent or white background. SVG preferred.
 
 **Process:**
 1. Analyze the app name and description to identify if it integrates with a known brand/service (e.g., "WhatsApp", "Slack", "Power BI")
 2. If a brand is identified, use `WebSearch` to find official or high-quality logo/icon URLs:
-   - Search for "{brand} logo png transparent" or "{brand} icon svg"
+   - Search for "{brand} logo svg" or "{brand} icon png transparent"
    - Look for URLs from official sources, Wikipedia, or reputable logo repositories
    - Prefer SVG or high-resolution PNG with transparent backgrounds
-3. If suitable images are found, store the URLs for `icon_url` and `banner_url`
-4. If no brand is identified, or images cannot be found, or it's ambiguous which images to use:
-   - Use `AskUserQuestion` to prompt the user for icon and banner URLs
-   - Explain what's needed (icon 64x64, banner 800x100, transparent/white background preferred)
+3. If a suitable image is found, store the URL as `icon_url`
+4. If no brand is identified, or an image cannot be found, or it's ambiguous which image to use:
+   - Use `AskUserQuestion` to prompt the user for an icon URL
+   - Explain what's needed (icon 64x64, transparent/white background preferred, SVG ideal)
 
-Store the URLs in the PHASE.md state file. The actual update to `doover_config.json` will happen in Phase 2.
+Store the URL in the PHASE.md state file. The actual update to `doover_config.json` will happen in Phase 2.
 
 ## State Updates
 
@@ -151,7 +150,6 @@ completed
 - **Repo Visibility:** public
 - **GitHub URL:** https://github.com/{org/repo-name}
 - **Icon URL:** {icon-url}
-- **Banner URL:** {banner-url}
 
 ## Completed Phases
 - [x] Phase 1: Creation - {timestamp}
@@ -163,7 +161,6 @@ completed
 - App type: {docker|processor|integration}
 - Has UI: {true|false}
 - Icon URL: {icon-url}
-- Banner URL: {banner-url}
 
 ## Next Action
 Phase 1 complete. Ready for next phase when available.
@@ -179,7 +176,7 @@ Phase 1 is complete when:
 - [ ] GitHub repository exists and is set as remote origin
 - [ ] Initial commit has been pushed to GitHub
 - [ ] `.appgen/PHASE.md` has been created with status "completed"
-- [ ] `.appgen/PHASE.md` contains `icon_url` and `banner_url`
+- [ ] `.appgen/PHASE.md` contains `icon_url`
 
 ## Phase Completion Output
 

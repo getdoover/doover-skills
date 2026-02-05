@@ -28,7 +28,7 @@ Your job: Configure the template, then return a summary.
 Read `{app-directory}/.appgen/PHASE.md` to get:
 - App name
 - `has_ui` value (true or false)
-- `icon_url` and `banner_url`
+- `icon_url`
 
 ### Step 2: Apply UI Configuration
 
@@ -46,18 +46,18 @@ No changes needed - the template already includes UI support.
 
 ### Step 3: Validate Image URLs
 
-Before applying the image URLs to doover_config.json, validate that they are accessible and return valid images.
+Before applying the icon URL to doover_config.json, validate that it is accessible and returns a valid image.
 
 **Validation process:**
 
-For each URL (`icon_url` and `banner_url`):
+For the `icon_url`:
 1. Make an HTTP HEAD or GET request to the URL using `curl -sI {url}` or `WebFetch`
 2. Check that the response status is 200 OK
 3. Optionally verify the Content-Type header contains `image/` (e.g., `image/svg+xml`, `image/png`)
 
 **If validation fails:**
 - Use `AskUserQuestion` to prompt the user for a replacement URL
-- Explain which URL failed and why
+- Explain that the URL failed and why
 - Re-validate the new URL before proceeding
 
 **Example validation command:**
@@ -69,13 +69,49 @@ Look for `HTTP/... 200` in the response. If you see 404, 403, or other errors, t
 
 ### Step 4: Update doover_config.json
 
-Update the `doover_config.json` file with the validated image URLs from Phase 1:
+The app-template's `doover_config.json` needs to be cleaned up for Docker device apps. Rewrite the config to match this structure:
 
-1. Read `{app-directory}/doover_config.json`
-2. Update the following fields under the app name key:
-   - `icon_url` - Set to the validated icon URL
-   - `banner_url` - Set to the validated banner URL
-3. Write the updated config back to `doover_config.json`
+```json
+{
+    "{app_name}": {
+        "name": "{app_name}",
+        "display_name": "{Display Name}",
+        "type": "DEV",
+        "visibility": "PUB",
+        "allow_many": true,
+        "description": "{description from PHASE.md}",
+        "long_description": "README.md",
+        "depends_on": [],
+        "owner_org_key": "",
+        "image_name": "{container_registry}/{app_name}:main",
+        "container_registry_profile_key": "",
+        "build_args": "--platform linux/amd64,linux/arm64",
+        "lambda_config": {},
+        "organisation_id": null,
+        "key": null,
+        "owner_org_id": null,
+        "code_repo_id": null,
+        "container_registry_profile_id": null,
+        "repo_branch": "main",
+        "icon_url": "{icon_url from PHASE.md}",
+        "staging_config": {},
+        "export_config_command": null,
+        "run_command": null,
+        "lambda_arn": null,
+        "config_schema": {}
+    }
+}
+```
+
+**Important notes:**
+- The top-level key and `name` field must match the app name (snake_case)
+- `display_name` should be a human-readable version (e.g., "My App")
+- `type` must be `"DEV"` for Docker device apps
+- `image_name` should be set to `{container_registry}/{app_name}:main` (e.g., `ghcr.io/getdoover/my_app:main`)
+- `build_args` enables multi-architecture builds (amd64 for cloud, arm64 for devices)
+- `lambda_config` should be an empty object `{}` (not used for Docker apps but field is expected)
+- Do NOT include an `id` field - this gets added during publishing
+- `config_schema` will be populated later by running `uv run export-config`
 
 ### Step 5: Update State
 
@@ -91,8 +127,10 @@ Update `.appgen/PHASE.md`:
 Phase 2 is complete when:
 - [ ] `app_ui.py` removed if `has_ui` is false
 - [ ] `application.py` updated to remove UI imports/code if `has_ui` is false
-- [ ] Image URLs validated (return 200 OK)
-- [ ] `doover_config.json` updated with validated `icon_url` and `banner_url`
+- [ ] Icon URL validated (returns 200 OK)
+- [ ] `doover_config.json` restructured for Docker device app (type: "DEV", image_name, build_args, etc.)
+- [ ] `doover_config.json` has validated `icon_url` set
+- [ ] `doover_config.json` does NOT have an `id` field
 - [ ] `.appgen/PHASE.md` updated with status "completed"
 
 ## Summary for Orchestrator
@@ -100,6 +138,6 @@ Phase 2 is complete when:
 When returning to the orchestrator, include:
 - **Status**: success or failure
 - **UI configured**: Whether UI was kept or removed
-- **Images configured**: icon_url and banner_url applied
+- **Config restructured**: doover_config.json updated for Docker device type
 - **Files modified**: List of files touched
 - **Errors**: Any issues encountered
