@@ -27,13 +27,29 @@ skills/doover-appgen/
     ├── phase-2d-config.md        # Phase 2: Docker config
     ├── phase-2p-config.md        # Phase 2: Processor config
     ├── phase-2i-config.md        # Phase 2: Integration config
-    ├── phase-3d-build.md         # Phase 3: Docker build
-    ├── phase-3p-build.md         # Phase 3: Processor build
-    ├── phase-3i-build.md         # Phase 3: Integration build
-    ├── phase-4-document.md       # Phase 4: Documentation (all app types)
-    ├── mini-docs-docker.md       # Docker device app development guide
-    ├── mini-docs-processor.md    # Processor development guide
-    └── mini-docs-integration.md  # Integration development guide
+    ├── phase-3d-plan.md          # Phase 3: Docker planning
+    ├── phase-3p-plan.md          # Phase 3: Processor planning
+    ├── phase-3i-plan.md          # Phase 3: Integration planning
+    ├── phase-4d-build.md         # Phase 4: Docker build
+    ├── phase-4p-build.md         # Phase 4: Processor build
+    ├── phase-4i-build.md         # Phase 4: Integration build
+    ├── phase-5d-check.md         # Phase 5: Docker validation
+    ├── phase-5p-check.md         # Phase 5: Processor validation
+    ├── phase-5i-check.md         # Phase 5: Integration validation
+    ├── phase-6-document.md       # Phase 6: Documentation (all app types)
+    └── mini-docs/                # Development documentation (chunked)
+        ├── index.md              # Chunk registry with keywords
+        ├── config-schema.md      # Configuration types (all app types)
+        ├── tags-channels.md      # Tags and channels (all app types)
+        ├── doover-config.md      # doover_config.json structure
+        ├── docker-application.md # Application class (docker)
+        ├── docker-ui.md          # UI components (docker/processor)
+        ├── docker-advanced.md    # State machines, workers, hardware I/O
+        ├── docker-project.md     # Entry point, Dockerfile, simulators
+        ├── cloud-handler.md      # Handler and events (processor/integration)
+        ├── cloud-project.md      # Build script, best practices
+        ├── processor-features.md # Processor-specific (subscriptions, schedules, UI)
+        └── integration-features.md # Integration-specific (ingestion, routing)
 ```
 
 Phase files are loaded on-demand. Do not read all phases upfront.
@@ -45,7 +61,8 @@ State is stored in the **target app directory**, not the skill directory:
 ```
 {target-app}/
 └── .appgen/
-    └── PHASE.md    # Current phase, status, user decisions
+    ├── PHASE.md    # Current phase, status, user decisions
+    └── PLAN.md     # Build plan (created in Phase 3)
 ```
 
 The `.appgen/PHASE.md` file tracks:
@@ -54,18 +71,22 @@ The `.appgen/PHASE.md` file tracks:
 - Completed phases with timestamps
 - User decisions made during the process
 
+The `.appgen/PLAN.md` file (created in Phase 3) contains:
+- Implementation plan for the Build phase
+- Configuration schema design
+- UI elements or event handlers to create
+- External integration details
+
 ## Available Phases
 
 | Phase | Name | Description |
 |-------|------|-------------|
 | 1 | Creation | Create the base Doover app using `doover app create` |
-| 2d | Docker Config | Configure Docker app template |
-| 2p | Processor Config | Configure processor template |
-| 2i | Integration Config | Configure integration template |
-| 3d | Docker Build | Generate Docker device application code |
-| 3p | Processor Build | Generate cloud processor code |
-| 3i | Integration Build | Generate cloud integration code |
-| 4 | Document | Generate comprehensive README.md documentation |
+| 2d/2p/2i | Config | Configure template based on app type |
+| 3d/3p/3i | Plan | Analyze requirements, resolve ambiguity, create PLAN.md |
+| 4d/4p/4i | Build | Generate application code from PLAN.md |
+| 5d/5p/5i | Check | Validate generated code |
+| 6 | Document | Generate comprehensive README.md documentation |
 
 Phase 2 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-2d-config.md
@@ -73,11 +94,21 @@ Phase 2 variant is selected based on `app_type` from Phase 1:
 - `integration` → phase-2i-config.md
 
 Phase 3 variant is selected based on `app_type` from Phase 1:
-- `docker` → phase-3d-build.md
-- `processor` → phase-3p-build.md
-- `integration` → phase-3i-build.md
+- `docker` → phase-3d-plan.md
+- `processor` → phase-3p-plan.md
+- `integration` → phase-3i-plan.md
 
-Additional phases will be added incrementally.
+Phase 4 variant is selected based on `app_type` from Phase 1:
+- `docker` → phase-4d-build.md
+- `processor` → phase-4p-build.md
+- `integration` → phase-4i-build.md
+
+Phase 5 variant is selected based on `app_type` from Phase 1:
+- `docker` → phase-5d-check.md
+- `processor` → phase-5p-check.md
+- `integration` → phase-5i-check.md
+
+Phase 6 is shared by all app types.
 
 ## Phase Gating Protocol
 
@@ -108,7 +139,7 @@ Each phase runs in an isolated subagent to manage context efficiently.
 
 1. Read the phase instructions from `references/phase-{N}-*.md`
 2. Read any existing state from `.appgen/` files
-3. Ask user questions as needed via `AskUserQuestion`
+3. Ask user questions as needed via `AskUserQuestion` (Phase 3 only for Build-related questions)
 4. Execute commands (doover CLI, gh CLI, etc.)
 5. Update `.appgen/PHASE.md` with results and user decisions
 6. Return a summary to the orchestrator
@@ -116,7 +147,7 @@ Each phase runs in an isolated subagent to manage context efficiently.
 ### Why Subagents?
 
 - **Context isolation**: Each phase starts fresh without baggage from previous phases
-- **State via files**: PHASE.md is the single source of truth for inter-phase communication
+- **State via files**: PHASE.md and PLAN.md are the sources of truth for inter-phase communication
 - **Efficient**: Smaller context per phase = faster, cheaper execution
 - **Resumable**: Re-invoking the skill reads PHASE.md and resumes from current phase
 
@@ -202,18 +233,18 @@ Task tool with:
        - Any errors
 ```
 
-**Phase 3 Subagent Invocation:**
+**Phase 3 Subagent Invocation (Plan):**
 
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 3 variant to use:
-- `docker` → use `phase-3d-build.md` and `mini-docs-docker.md`
-- `processor` → use `phase-3p-build.md` and `mini-docs-processor.md`
-- `integration` → use `phase-3i-build.md` and `mini-docs-integration.md`
+- `docker` → use `phase-3d-plan.md`
+- `processor` → use `phase-3p-plan.md`
+- `integration` → use `phase-3i-plan.md`
 
 ```
 Task tool with:
   subagent_type: "general-purpose"
   prompt: |
-    Execute Phase 3 of the doover-appgen skill.
+    Execute Phase 3 (Plan) of the doover-appgen skill.
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
@@ -222,45 +253,123 @@ Task tool with:
     Instructions:
     1. Read {app-dir}/.appgen/PHASE.md to get app name, description, and app type
     2. Based on app type, read the appropriate phase instructions:
-       - docker: {skill-path}/references/phase-3d-build.md
-       - processor: {skill-path}/references/phase-3p-build.md
-       - integration: {skill-path}/references/phase-3i-build.md
-    3. Read the corresponding development guide:
-       - docker: {skill-path}/references/mini-docs-docker.md
-       - processor: {skill-path}/references/mini-docs-processor.md
-       - integration: {skill-path}/references/mini-docs-integration.md
-    4. Follow the phase instructions to generate the appropriate application code
-    5. If external packages needed, run: uv add {package}
-    6. Update {app-dir}/.appgen/PHASE.md with completion status
-    7. Return a summary including:
-       - Files created/modified
-       - What the app does
-       - Known limitations
+       - docker: {skill-path}/references/phase-3d-plan.md
+       - processor: {skill-path}/references/phase-3p-plan.md
+       - integration: {skill-path}/references/phase-3i-plan.md
+    3. Read the documentation index: {skill-path}/references/mini-docs/index.md
+    4. Based on app type, read the required documentation chunks from mini-docs/
+    5. Analyze the app description and identify requirements
+    6. If the description is ambiguous, use AskUserQuestion to clarify
+    7. If external integration is needed, use WebSearch to find API documentation
+    8. Create {app-dir}/.appgen/PLAN.md with the complete build plan (include Documentation Chunks section)
+    9. Update {app-dir}/.appgen/PHASE.md with completion status
+    10. Return a summary including:
+       - What external integrations were identified
+       - What questions were asked (if any)
+       - What documentation was found (if any)
+       - Brief summary of the plan
        - Any errors
 ```
 
-**Phase 4 Subagent Invocation:**
+**Phase 4 Subagent Invocation (Build):**
 
-Phase 4 is shared by all app types - there is no variant selection needed.
+First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 4 variant to use:
+- `docker` → use `phase-4d-build.md`
+- `processor` → use `phase-4p-build.md`
+- `integration` → use `phase-4i-build.md`
 
 ```
 Task tool with:
   subagent_type: "general-purpose"
   prompt: |
-    Execute Phase 4 of the doover-appgen skill.
+    Execute Phase 4 (Build) of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+    App type: {app_type}  # docker, processor, or integration
+
+    IMPORTANT: Do NOT use AskUserQuestion. All requirements should be in PLAN.md.
+    If PLAN.md is unclear, report this as an error.
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app name and path
+    2. Read {app-dir}/.appgen/PLAN.md for implementation details
+    3. Based on app type, read the appropriate phase instructions:
+       - docker: {skill-path}/references/phase-4d-build.md
+       - processor: {skill-path}/references/phase-4p-build.md
+       - integration: {skill-path}/references/phase-4i-build.md
+    4. Read documentation chunks for code patterns:
+       - Read chunks listed in PLAN.md's "Documentation Chunks" section
+       - Use keyword-based discovery to find additional relevant chunks from mini-docs/index.md
+    5. Generate application code following PLAN.md exactly
+    6. If external packages needed, run: uv add {package}
+    7. Run: uv run export-config
+    8. Update {app-dir}/.appgen/PHASE.md with completion status
+    9. Return a summary including:
+       - Files created/modified
+       - What the app does
+       - Dependencies added
+       - Any errors
+```
+
+**Phase 5 Subagent Invocation (Check):**
+
+First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 5 variant to use:
+- `docker` → use `phase-5d-check.md`
+- `processor` → use `phase-5p-check.md`
+- `integration` → use `phase-5i-check.md`
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 5 (Check) of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+    App type: {app_type}  # docker, processor, or integration
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app name and path
+    2. Based on app type, read the appropriate phase instructions:
+       - docker: {skill-path}/references/phase-5d-check.md
+       - processor: {skill-path}/references/phase-5p-check.md
+       - integration: {skill-path}/references/phase-5i-check.md
+    3. Run validation checks:
+       - uv sync (dependencies resolve)
+       - Import check (code imports successfully)
+       - doover config-schema export (config is valid)
+    4. Verify file structure is correct
+    5. Update {app-dir}/.appgen/PHASE.md with validation results
+    6. Return a summary including:
+       - Checks passed
+       - Checks failed (with details)
+       - Recommended fixes (if any)
+       - Any errors
+```
+
+**Phase 6 Subagent Invocation (Document):**
+
+Phase 6 is shared by all app types - there is no variant selection needed.
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 6 (Document) of the doover-appgen skill.
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
 
     Instructions:
     1. Read {app-dir}/.appgen/PHASE.md to get app details (name, description, type, GitHub URL, icon URL)
-    2. Read {skill-path}/references/phase-4-document.md for instructions
+    2. Read {skill-path}/references/phase-6-document.md for instructions
     3. Read the application code to understand what it does:
        - {app-dir}/doover_config.json for configuration schema
        - {app-dir}/src/{app_name}/application.py for core functionality
        - {app-dir}/src/{app_name}/app_config.py for config options
        - {app-dir}/src/{app_name}/app_ui.py for UI elements (if present)
-    4. Generate a comprehensive README.md following the template in phase-4-document.md
+    4. Generate a comprehensive README.md following the template in phase-6-document.md
     5. Include all required sections: Overview, Features, Getting Started, Configuration, Tags/UI, How It Works, etc.
     6. Update {app-dir}/.appgen/PHASE.md with completion status
     7. Return a summary including:

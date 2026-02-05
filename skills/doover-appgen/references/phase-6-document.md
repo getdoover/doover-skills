@@ -1,4 +1,4 @@
-# Phase 4: Document
+# Phase 6: Document
 
 Generate comprehensive README.md documentation for the application.
 
@@ -17,7 +17,7 @@ Your job: Generate the README.md, then return a summary.
 
 ## Prerequisites
 
-- Phase 3 must be completed (application code exists)
+- Phase 5 must be completed (application code validated)
 - `.appgen/PHASE.md` contains app details
 
 ## Steps
@@ -246,9 +246,9 @@ Ensure:
 
 Update `.appgen/PHASE.md`:
 
-- Set current phase to "Phase 4 - Document"
+- Set current phase to "Phase 6 - Document"
 - Set status to "completed"
-- Add Phase 4 to completed phases list
+- Add Phase 6 to completed phases list
 - Note that README.md was generated
 
 ## Section Requirements
@@ -273,7 +273,7 @@ Each section must be filled out completely:
 
 ## Completion Criteria
 
-Phase 4 is complete when:
+Phase 6 is complete when:
 - [ ] README.md exists with all required sections
 - [ ] Configuration table is complete and accurate
 - [ ] Tags or UI elements are documented
