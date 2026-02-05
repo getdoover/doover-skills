@@ -23,9 +23,16 @@ This skill guides users through creating Doover applications step-by-step. Each 
 skills/doover-appgen/
 ├── SKILL.md                      # This file - orchestrator and routing
 └── references/
-    ├── phase-1-app-create.md     # Phase 1: Initial app creation
-    ├── phase-2-app-build.md      # Phase 2: Generate app code
-    └── mini-docs.md              # Doover app development guide
+    ├── phase-1-create.md         # Phase 1: Initial creation
+    ├── phase-2d-config.md        # Phase 2: Docker config
+    ├── phase-2p-config.md        # Phase 2: Processor config
+    ├── phase-2i-config.md        # Phase 2: Integration config
+    ├── phase-3d-build.md         # Phase 3: Docker build
+    ├── phase-3p-build.md         # Phase 3: Processor build
+    ├── phase-3i-build.md         # Phase 3: Integration build
+    ├── mini-docs-docker.md       # Docker device app development guide
+    ├── mini-docs-processor.md    # Processor development guide
+    └── mini-docs-integration.md  # Integration development guide
 ```
 
 Phase files are loaded on-demand. Do not read all phases upfront.
@@ -50,8 +57,23 @@ The `.appgen/PHASE.md` file tracks:
 
 | Phase | Name | Description |
 |-------|------|-------------|
-| 1 | App Creation | Create the base Doover app using `doover app create` |
-| 2 | App Build | Generate application code based on description |
+| 1 | Creation | Create the base Doover app using `doover app create` |
+| 2d | Docker Config | Configure Docker app template |
+| 2p | Processor Config | Configure processor template |
+| 2i | Integration Config | Configure integration template |
+| 3d | Docker Build | Generate Docker device application code |
+| 3p | Processor Build | Generate cloud processor code |
+| 3i | Integration Build | Generate cloud integration code |
+
+Phase 2 variant is selected based on `app_type` from Phase 1:
+- `docker` → phase-2d-config.md
+- `processor` → phase-2p-config.md
+- `integration` → phase-2i-config.md
+
+Phase 3 variant is selected based on `app_type` from Phase 1:
+- `docker` → phase-3d-build.md
+- `processor` → phase-3p-build.md
+- `integration` → phase-3i-build.md
 
 Additional phases will be added incrementally.
 
@@ -130,11 +152,13 @@ Task tool with:
     Skill location: {path-to-this-skill}
 
     Instructions:
-    1. Read {skill-path}/references/phase-1-app-create.md
+    1. Read {skill-path}/references/phase-1-create.md
     2. Follow the interactive steps - use AskUserQuestion to gather:
        - App name (kebab-case)
        - App description
        - GitHub repo path (org/repo-name)
+       - App type (docker, processor, or integration)
+       - Has UI (only for docker/processor - integrations never have UI)
     3. Run `doover app create` with the gathered parameters
     4. Run `gh repo create` to create and push to GitHub
     5. Create {target-dir}/{app-name}/.appgen/PHASE.md with all state
@@ -146,6 +170,11 @@ Task tool with:
 
 **Phase 2 Subagent Invocation:**
 
+First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 2 variant to use:
+- `docker` → use `phase-2d-config.md`
+- `processor` → use `phase-2p-config.md`
+- `integration` → use `phase-2i-config.md`
+
 ```
 Task tool with:
   subagent_type: "general-purpose"
@@ -154,16 +183,51 @@ Task tool with:
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
+    App type: {app_type}  # docker, processor, or integration
 
     Instructions:
-    1. Read {app-dir}/.appgen/PHASE.md to get app name and description
-    2. Read {skill-path}/references/phase-2-app-build.md for phase instructions
-    3. Read {skill-path}/references/mini-docs.md for Doover app patterns
-    4. Generate application code (prefer pydoover imports, avoid external deps):
-       - src/{app_name}/application.py
-       - src/{app_name}/app_config.py
-       - src/{app_name}/app_ui.py
-       - src/{app_name}/__init__.py
+    1. Read {app-dir}/.appgen/PHASE.md to get app name, app type, and has_ui value
+    2. Based on app type, read the appropriate phase instructions:
+       - docker: {skill-path}/references/phase-2d-config.md
+       - processor: {skill-path}/references/phase-2p-config.md
+       - integration: {skill-path}/references/phase-2i-config.md
+    3. Follow the phase instructions to configure the template
+    4. If has_ui is false (or integration type), remove app_ui.py and UI-related code
+    5. Update {app-dir}/.appgen/PHASE.md with completion status
+    6. Return a summary including:
+       - Files modified
+       - Configuration applied
+       - Any errors
+```
+
+**Phase 3 Subagent Invocation:**
+
+First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 3 variant to use:
+- `docker` → use `phase-3d-build.md` and `mini-docs-docker.md`
+- `processor` → use `phase-3p-build.md` and `mini-docs-processor.md`
+- `integration` → use `phase-3i-build.md` and `mini-docs-integration.md`
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 3 of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+    App type: {app_type}  # docker, processor, or integration
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app name, description, and app type
+    2. Based on app type, read the appropriate phase instructions:
+       - docker: {skill-path}/references/phase-3d-build.md
+       - processor: {skill-path}/references/phase-3p-build.md
+       - integration: {skill-path}/references/phase-3i-build.md
+    3. Read the corresponding development guide:
+       - docker: {skill-path}/references/mini-docs-docker.md
+       - processor: {skill-path}/references/mini-docs-processor.md
+       - integration: {skill-path}/references/mini-docs-integration.md
+    4. Follow the phase instructions to generate the appropriate application code
     5. If external packages needed, run: uv add {package}
     6. Update {app-dir}/.appgen/PHASE.md with completion status
     7. Return a summary including:

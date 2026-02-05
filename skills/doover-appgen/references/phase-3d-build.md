@@ -1,10 +1,10 @@
-# Phase 2: App Build
+# Phase 3d: Docker Build
 
-Generate the application code based on the app description.
+Generate the Docker device application code based on the app description.
 
 ## Phase Objective
 
-Use the Doover app development guide to generate working application code that implements the functionality described in Phase 1.
+Use the Doover device app development guide to generate working Docker application code that implements the functionality described in Phase 1.
 
 ## Execution Context
 
@@ -32,7 +32,7 @@ Read `{app-directory}/.appgen/PHASE.md` to get:
 ### Step 2: Load Development Guide
 
 Read the Doover device app development guide (bundled with this skill):
-`references/mini-docs.md`
+`references/mini-docs-docker.md`
 
 This contains:
 - Project structure
@@ -118,14 +118,14 @@ uv run python -c "from {app_name}.application import *; print('Import OK')"
 
 After successful code generation, update `.appgen/PHASE.md`:
 
-- Set current phase to "Phase 2 - App Build"
+- Set current phase to "Phase 3 - Docker Build"
 - Set status to "completed"
-- Add Phase 2 to completed phases list
+- Add Phase 3 to completed phases list
 - Add notes about what was generated
 
 ## Completion Criteria
 
-Phase 2 is complete when:
+Phase 3 is complete when:
 - [ ] Application class exists with `setup()` and `main_loop()`
 - [ ] Config schema is defined
 - [ ] UI components are defined
