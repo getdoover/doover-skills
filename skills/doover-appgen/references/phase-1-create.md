@@ -58,11 +58,22 @@ Use `AskUserQuestion` to collect required information:
 - **If references were already provided via the initial prompt** (the orchestrator will pass `references_from_prompt` in the subagent prompt): skip this question and write them directly into PHASE.md
 - **Otherwise:** Ask "Do you have any existing repos you'd like to use as references for this app? (e.g., to borrow a config pattern, UI approach, or data flow from an existing app)"
   - If No → set `has_references: false`, proceed
-  - If Yes → for each reference, gather:
-    - **6a:** Repository location (local path or GitHub `org/repo`)
-    - **6b:** What specific aspects to extract (free text — e.g., "their MQTT retry logic", "the config schema fields")
-    - **6c:** "Add another reference?" (repeat if yes)
-  - Set `has_references: true`
+  - If Yes → enter the reference-gathering loop below, then set `has_references: true`
+
+**Reference-gathering loop (repeat until user says no more):**
+
+1. Use `AskUserQuestion` with **two questions** in a single call:
+   - **Question 1:** "What is the reference repository location?" (header: "Source") — options: "Local path" / "GitHub org/repo"
+   - **Question 2:** "What specific aspects should be extracted from this reference?" (header: "Extract") — options: provide 2-3 contextual examples like "Config schema pattern" / "UI component approach" / "Data flow logic" (user can pick or type their own via Other)
+
+2. Record the answers as a numbered reference (Reference 1, Reference 2, etc.)
+
+3. Use `AskUserQuestion` with **one question**:
+   - "Would you like to add another reference repository?" (header: "More refs?")
+   - Options: "No, that's all" / "Yes, add another"
+
+4. If user selects "Yes, add another" → go back to step 1
+5. If user selects "No, that's all" → exit loop and proceed
 
 **Hardcoded defaults (not asked):**
 - Container registry: `ghcr.io/getdoover`
@@ -117,7 +128,7 @@ After both commands complete:
 The app needs an icon image for display in the Doover admin UI. Based on the app name and description, attempt to identify a brand or service associated with the app.
 
 **Image requirements:**
-- **Icon:** Will be displayed at 64x64px. Should have a transparent or white background. SVG preferred.
+- **Icon:** Will be displayed at 256x256px. Should have a transparent or white background. SVG preferred.
 
 **Process:**
 1. Analyze the app name and description to identify if it integrates with a known brand/service (e.g., "WhatsApp", "Slack", "Power BI")
@@ -128,7 +139,7 @@ The app needs an icon image for display in the Doover admin UI. Based on the app
 3. If a suitable image is found, store the URL as `icon_url`
 4. If no brand is identified, or an image cannot be found, or it's ambiguous which image to use:
    - Use `AskUserQuestion` to prompt the user for an icon URL
-   - Explain what's needed (icon 64x64, transparent/white background preferred, SVG ideal)
+   - Explain what's needed (icon 256x256, transparent/white background preferred, SVG ideal)
 
 Store the URL in the PHASE.md state file. The actual update to `doover_config.json` will happen in Phase 2.
 

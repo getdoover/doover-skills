@@ -60,7 +60,38 @@ For the `icon_url`:
 2. Check that the response status is 200 OK
 3. Optionally verify the Content-Type header contains `image/` (e.g., `image/svg+xml`, `image/png`)
 
-**If validation fails:**
+**If the image is too large (file size > 100KB or dimensions significantly larger than 256x256):**
+
+Instead of asking the user for a different URL, download and resize the image locally:
+
+1. Download the image into the repo's `assets/` directory:
+   ```bash
+   mkdir -p {app-dir}/assets
+   curl -sL "{icon_url}" -o {app-dir}/assets/icon_original.png
+   ```
+2. Resize to 256x256 using ImageMagick, preserving aspect ratio and transparency (pad with transparent background if not square):
+   ```bash
+   convert {app-dir}/assets/icon_original.png -resize 256x256 -gravity center -background none -extent 256x256 {app-dir}/assets/icon.png
+   ```
+   For SVG sources, convert to PNG at the target size:
+   ```bash
+   convert -background none -density 256 {icon_url_or_file} -resize 256x256 {app-dir}/assets/icon.png
+   ```
+3. Remove the original if a resized copy was created:
+   ```bash
+   rm -f {app-dir}/assets/icon_original.png
+   ```
+4. Stage the icon file:
+   ```bash
+   git -C {app-dir} add assets/icon.png
+   ```
+5. Update `icon_url` to use the GitHub raw URL for the hosted image:
+   ```
+   https://raw.githubusercontent.com/{org}/{repo}/main/assets/icon.png
+   ```
+   Use the GitHub URL from PHASE.md to construct this.
+
+**If validation fails (non-200 response, not an image):**
 - Use `AskUserQuestion` to prompt the user for a replacement URL
 - Explain that the URL failed and why
 - Re-validate the new URL before proceeding
