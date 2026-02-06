@@ -40,6 +40,14 @@ Your job: Analyze, clarify, plan, then return a summary.
    - `references/mini-docs/cloud-project.md` - Project setup and build script
    - `references/mini-docs/integration-features.md` - Integration-specific features (IngestionEndpointConfig, ExtendedPermissionsConfig, device routing)
 
+### Step 1b: Check for Reference Patterns
+
+Check if `{app-directory}/.appgen/REFERENCES.md` exists:
+- If yes, read it completely
+- Note the extracted patterns and how they apply to this app
+- These patterns should inform your design decisions in subsequent steps
+- Reference relevant patterns in the Implementation Notes section of PLAN.md
+
 ### Step 2: Analyze Requirements
 
 Based on the app description, identify:
@@ -200,6 +208,12 @@ Create `{app-directory}/.appgen/PLAN.md` with the following structure:
 ### Discovery Keywords
 {List keywords for Build phase to auto-discover additional chunks}
 Example: ingestion, payload, parse, device routing, hmac, cidr
+
+## Reference Patterns Applied
+(Include this section only if REFERENCES.md was present)
+| Pattern | Source Aspect | How Applied |
+|---------|--------------|-------------|
+| {name} | {what was extracted} | {how it influences this plan} |
 
 ## Implementation Notes
 - {Key patterns to follow}

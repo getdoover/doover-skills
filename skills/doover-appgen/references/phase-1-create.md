@@ -54,6 +54,16 @@ Use `AskUserQuestion` to collect required information:
 - Store the selection as: `has_ui: true` or `has_ui: false`
 - For integrations, automatically set `has_ui: false` without asking
 
+**Question 6: Reference Repositories** (optional)
+- **If references were already provided via the initial prompt** (the orchestrator will pass `references_from_prompt` in the subagent prompt): skip this question and write them directly into PHASE.md
+- **Otherwise:** Ask "Do you have any existing repos you'd like to use as references for this app? (e.g., to borrow a config pattern, UI approach, or data flow from an existing app)"
+  - If No → set `has_references: false`, proceed
+  - If Yes → for each reference, gather:
+    - **6a:** Repository location (local path or GitHub `org/repo`)
+    - **6b:** What specific aspects to extract (free text — e.g., "their MQTT retry logic", "the config schema fields")
+    - **6c:** "Add another reference?" (repeat if yes)
+  - Set `has_references: true`
+
 **Hardcoded defaults (not asked):**
 - Container registry: `ghcr.io/getdoover`
 - Repository visibility: public
@@ -154,12 +164,23 @@ completed
 ## Completed Phases
 - [x] Phase 1: Creation - {timestamp}
 
+## References
+- **Has References:** {true|false}
+
+### Reference 1
+- **Location:** {path or org/repo}
+- **Type:** {local|github}
+- **Extract:** {user's description of what to extract}
+
+(Repeat for additional references. Omit reference entries if has_references is false.)
+
 ## User Decisions
 - App name: {app-name}
 - Description: {description}
 - GitHub repo: {org/repo-name}
 - App type: {docker|processor|integration}
 - Has UI: {true|false}
+- Has references: {true|false}
 - Icon URL: {icon-url}
 
 ## Next Action

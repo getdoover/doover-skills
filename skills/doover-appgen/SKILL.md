@@ -27,6 +27,7 @@ skills/doover-appgen/
     ├── phase-2d-config.md        # Phase 2: Docker config
     ├── phase-2p-config.md        # Phase 2: Processor config
     ├── phase-2i-config.md        # Phase 2: Integration config
+    ├── phase-r-refs.md           # Phase R: Reference extraction (optional)
     ├── phase-3d-plan.md          # Phase 3: Docker planning
     ├── phase-3p-plan.md          # Phase 3: Processor planning
     ├── phase-3i-plan.md          # Phase 3: Integration planning
@@ -61,8 +62,9 @@ State is stored in the **target app directory**, not the skill directory:
 ```
 {target-app}/
 └── .appgen/
-    ├── PHASE.md    # Current phase, status, user decisions
-    └── PLAN.md     # Build plan (created in Phase 3)
+    ├── PHASE.md       # Current phase, status, user decisions
+    ├── REFERENCES.md  # Reference patterns (created in Phase R, optional)
+    └── PLAN.md        # Build plan (created in Phase 3)
 ```
 
 The `.appgen/PHASE.md` file tracks:
@@ -83,6 +85,7 @@ The `.appgen/PLAN.md` file (created in Phase 3) contains:
 |-------|------|-------------|
 | 1 | Creation | Create the base Doover app using `doover app create` |
 | 2d/2p/2i | Config | Configure template based on app type |
+| R | References | Extract patterns from reference repositories (optional) |
 | 3d/3p/3i | Plan | Analyze requirements, resolve ambiguity, create PLAN.md |
 | 4d/4p/4i | Build | Generate application code from PLAN.md |
 | 5d/5p/5i | Check | Validate generated code |
@@ -169,6 +172,17 @@ Look for `{target-dir}/.appgen/PHASE.md`:
   - If status is "completed" → Proceed to next phase
   - If status is "in_progress" → Resume current phase
 
+### Step 2b: Detect Inline References
+
+Before spawning Phase 1, check the user's initial prompt for references mentioned inline (e.g., "run appgen and use org/repo as a reference for their MQTT retry logic").
+
+If references are detected in the prompt:
+- Parse out: repository location + what to extract for each reference
+- Pass this as `references_from_prompt` in the Phase 1 subagent prompt so Phase 1 can write them into PHASE.md (setting `has_references: true`) without re-asking the user
+- Phase 1 will skip Question 6 (reference repos) since references are already provided
+
+If no references are detected, proceed normally — Phase 1 will ask about references as Question 6.
+
 ### Step 3: Spawn Phase Subagent
 
 Use the Task tool to spawn a subagent for the current phase.
@@ -184,6 +198,8 @@ Task tool with:
     Target directory: {target-dir}
     Skill location: {path-to-this-skill}
 
+    References from prompt (if any): {references_from_prompt or "none"}
+
     Instructions:
     1. Read {skill-path}/references/phase-1-create.md
     2. Follow the interactive steps - use AskUserQuestion to gather:
@@ -192,12 +208,14 @@ Task tool with:
        - GitHub repo path (org/repo-name)
        - App type (docker, processor, or integration)
        - Has UI (only for docker/processor - integrations never have UI)
+       - Reference repos (skip if references_from_prompt was provided)
     3. Run `doover app create` with the gathered parameters
     4. Run `gh repo create` to create and push to GitHub
-    5. Create {target-dir}/{app-name}/.appgen/PHASE.md with all state
+    5. Create {target-dir}/{app-name}/.appgen/PHASE.md with all state (including references)
     6. Return a summary including:
        - App name and directory path
        - GitHub URL
+       - Whether references were recorded
        - Any issues encountered
 ```
 
@@ -233,6 +251,34 @@ Task tool with:
        - Any errors
 ```
 
+**Phase R Subagent Invocation (References) — Conditional:**
+
+After Phase 2 completes, read `has_references` from `{app-dir}/.appgen/PHASE.md`:
+- If `true` and Phase R is not yet completed → spawn Phase R subagent below
+- If `false` or Phase R already completed → skip directly to Phase 3
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase R (References) of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md for the reference list
+    2. Read {skill-path}/references/phase-r-refs.md for full instructions
+    3. For each reference: resolve ambiguity, acquire source, extract patterns
+    4. Write {app-dir}/.appgen/REFERENCES.md with curated patterns
+    5. Cleanup any temp clone directories
+    6. Update {app-dir}/.appgen/PHASE.md with completion status
+    7. Return a summary including:
+       - References processed and skipped
+       - Aspects extracted
+       - Any errors
+```
+
 **Phase 3 Subagent Invocation (Plan):**
 
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 3 variant to use:
@@ -256,14 +302,15 @@ Task tool with:
        - docker: {skill-path}/references/phase-3d-plan.md
        - processor: {skill-path}/references/phase-3p-plan.md
        - integration: {skill-path}/references/phase-3i-plan.md
-    3. Read the documentation index: {skill-path}/references/mini-docs/index.md
-    4. Based on app type, read the required documentation chunks from mini-docs/
-    5. Analyze the app description and identify requirements
-    6. If the description is ambiguous, use AskUserQuestion to clarify
-    7. If external integration is needed, use WebSearch to find API documentation
-    8. Create {app-dir}/.appgen/PLAN.md with the complete build plan (include Documentation Chunks section)
-    9. Update {app-dir}/.appgen/PHASE.md with completion status
-    10. Return a summary including:
+    3. If {app-dir}/.appgen/REFERENCES.md exists, read it for reference patterns
+    4. Read the documentation index: {skill-path}/references/mini-docs/index.md
+    5. Based on app type, read the required documentation chunks from mini-docs/
+    6. Analyze the app description and identify requirements
+    7. If the description is ambiguous, use AskUserQuestion to clarify
+    8. If external integration is needed, use WebSearch to find API documentation
+    9. Create {app-dir}/.appgen/PLAN.md with the complete build plan (include Documentation Chunks section and Reference Patterns Applied section if references exist)
+    10. Update {app-dir}/.appgen/PHASE.md with completion status
+    11. Return a summary including:
        - What external integrations were identified
        - What questions were asked (if any)
        - What documentation was found (if any)
