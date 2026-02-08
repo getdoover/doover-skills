@@ -37,21 +37,10 @@ skills/doover-appgen/
     ├── phase-5d-check.md         # Phase 5: Docker validation
     ├── phase-5p-check.md         # Phase 5: Processor validation
     ├── phase-5i-check.md         # Phase 5: Integration validation
-    ├── phase-6-document.md       # Phase 6: Documentation (all app types)
-    └── mini-docs/                # Development documentation (chunked)
-        ├── index.md              # Chunk registry with keywords
-        ├── config-schema.md      # Configuration types (all app types)
-        ├── tags-channels.md      # Tags and channels (all app types)
-        ├── doover-config.md      # doover_config.json structure
-        ├── docker-application.md # Application class (docker)
-        ├── docker-ui.md          # UI components (docker/processor)
-        ├── docker-advanced.md    # State machines, workers, hardware I/O
-        ├── docker-project.md     # Entry point, Dockerfile, simulators
-        ├── cloud-handler.md      # Handler and events (processor/integration)
-        ├── cloud-project.md      # Build script, best practices
-        ├── processor-features.md # Processor-specific (subscriptions, schedules, UI)
-        └── integration-features.md # Integration-specific (ingestion, routing)
+    └── phase-6-document.md       # Phase 6: Documentation (all app types)
 ```
+
+**External dependency:** Platform documentation lives in `skills/doover-platform-docs/` (the `doover-platform-docs` skill). Subagents are given `{platform-docs-path}` to locate these docs.
 
 Phase files are loaded on-demand. Do not read all phases upfront.
 
@@ -163,6 +152,13 @@ Each phase runs in an isolated subagent to manage context efficiently.
 - If user specified a path, use that
 - Otherwise, use the current working directory
 - Store this as `{target-dir}` for subagent prompts
+
+### Step 1b: Resolve Platform Docs Path
+
+The platform documentation lives in the `doover-platform-docs` skill, located relative to this skill:
+- `{platform-docs-path}` = `{this-skill-path}/../doover-platform-docs`
+- Verify the path exists (check for `{platform-docs-path}/references/index.md`)
+- This path is passed to Phase 3 and Phase 4 subagents
 
 ### Step 2: Check for Existing State
 
@@ -294,6 +290,7 @@ Task tool with:
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
+    Platform docs: {platform-docs-path}  # path to doover-platform-docs skill
     App type: {app_type}  # docker, processor, or integration
 
     Instructions:
@@ -303,8 +300,8 @@ Task tool with:
        - processor: {skill-path}/references/phase-3p-plan.md
        - integration: {skill-path}/references/phase-3i-plan.md
     3. If {app-dir}/.appgen/REFERENCES.md exists, read it for reference patterns
-    4. Read the documentation index: {skill-path}/references/mini-docs/index.md
-    5. Based on app type, read the required documentation chunks from mini-docs/
+    4. Read the documentation index: {platform-docs-path}/references/index.md
+    5. Based on app type, read the required documentation chunks from {platform-docs-path}/references/
     6. Analyze the app description and identify requirements
     7. If the description is ambiguous, use AskUserQuestion to clarify
     8. If external integration is needed, use WebSearch to find API documentation
@@ -333,6 +330,7 @@ Task tool with:
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
+    Platform docs: {platform-docs-path}  # path to doover-platform-docs skill
     App type: {app_type}  # docker, processor, or integration
 
     IMPORTANT: Do NOT use AskUserQuestion. All requirements should be in PLAN.md.
@@ -347,7 +345,7 @@ Task tool with:
        - integration: {skill-path}/references/phase-4i-build.md
     4. Read documentation chunks for code patterns:
        - Read chunks listed in PLAN.md's "Documentation Chunks" section
-       - Use keyword-based discovery to find additional relevant chunks from mini-docs/index.md
+       - Use keyword-based discovery to find additional relevant chunks from {platform-docs-path}/references/index.md
     5. Generate application code following PLAN.md exactly
     6. If external packages needed, run: uv add {package}
     7. Run: uv run export-config

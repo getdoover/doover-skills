@@ -33,16 +33,16 @@ Your job: Analyze, clarify, plan, then return a summary.
    - Has UI flag
 
 2. Read the documentation index:
-   `references/mini-docs/index.md`
+   `{platform-docs-path}/references/index.md`
 
 3. Based on the index, read the required chunks for Processor apps:
-   - `references/mini-docs/config-schema.md` - Configuration patterns
-   - `references/mini-docs/cloud-handler.md` - Handler and event patterns
-   - `references/mini-docs/cloud-project.md` - Project setup and build script
-   - `references/mini-docs/processor-features.md` - Processor-specific features (ManySubscriptionConfig, ScheduleConfig, UI management, connection status)
+   - `{platform-docs-path}/references/config-schema.md` - Configuration patterns
+   - `{platform-docs-path}/references/cloud-handler.md` - Handler and event patterns
+   - `{platform-docs-path}/references/cloud-project.md` - Project setup and build script
+   - `{platform-docs-path}/references/processor-features.md` - Processor-specific features (ManySubscriptionConfig, ScheduleConfig, UI management, connection status)
 
 4. If has_ui is true, also read:
-   - `references/mini-docs/docker-ui.md` - UI component patterns (same for processors)
+   - `{platform-docs-path}/references/docker-ui.md` - UI component patterns (same for processors)
 
 ### Step 1b: Check for Reference Patterns
 

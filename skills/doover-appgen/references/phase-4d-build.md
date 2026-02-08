@@ -39,7 +39,7 @@ Your job: Generate the app code following PLAN.md, then return a summary.
 ### Step 2: Load Documentation Chunks
 
 1. Read the documentation index:
-   `references/mini-docs/index.md`
+   `{platform-docs-path}/references/index.md`
 
 2. Read the chunks listed in PLAN.md's "Documentation Chunks" section:
    - Required chunks (always read these)
@@ -52,14 +52,14 @@ Your job: Generate the app code following PLAN.md, then return a summary.
    - If PLAN.md mentions "warning", "alert" → read `docker-ui.md`
 
 4. Common chunks for Docker apps:
-   - `references/mini-docs/config-schema.md` - Configuration patterns
-   - `references/mini-docs/docker-application.md` - Application class structure
-   - `references/mini-docs/docker-project.md` - Entry point and Dockerfile
-   - `references/mini-docs/docker-ui.md` - UI components (if has_ui)
-   - `references/mini-docs/docker-advanced.md` - State machines, workers, hardware I/O
-   - `references/mini-docs/tags-channels.md` - Tags and channels
+   - `{platform-docs-path}/references/config-schema.md` - Configuration patterns
+   - `{platform-docs-path}/references/docker-application.md` - Application class structure
+   - `{platform-docs-path}/references/docker-project.md` - Entry point and Dockerfile
+   - `{platform-docs-path}/references/docker-ui.md` - UI components (if has_ui)
+   - `{platform-docs-path}/references/docker-advanced.md` - State machines, workers, hardware I/O
+   - `{platform-docs-path}/references/tags-channels.md` - Tags and channels
 
-Use these for code patterns and syntax. The PLAN.md tells you *what* to build; the mini-docs tell you *how* to build it.
+Use these for code patterns and syntax. The PLAN.md tells you *what* to build; the platform docs tell you *how* to build it.
 
 ### Step 3: Generate Application Code
 

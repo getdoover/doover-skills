@@ -33,15 +33,15 @@ Your job: Analyze, clarify, plan, then return a summary.
    - Has UI flag
 
 2. Read the documentation index:
-   `references/mini-docs/index.md`
+   `{platform-docs-path}/references/index.md`
 
 3. Based on the index, read the required chunks for Docker apps:
-   - `references/mini-docs/config-schema.md` - Configuration patterns
-   - `references/mini-docs/docker-application.md` - Application class structure
-   - `references/mini-docs/docker-project.md` - Project setup patterns
+   - `{platform-docs-path}/references/config-schema.md` - Configuration patterns
+   - `{platform-docs-path}/references/docker-application.md` - Application class structure
+   - `{platform-docs-path}/references/docker-project.md` - Project setup patterns
 
 4. If has_ui is true, also read:
-   - `references/mini-docs/docker-ui.md` - UI component patterns
+   - `{platform-docs-path}/references/docker-ui.md` - UI component patterns
 
 ### Step 1b: Check for Reference Patterns
 
