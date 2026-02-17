@@ -26,13 +26,16 @@ skills/doover-appgen/
     ├── phase-1-create.md         # Phase 1: Initial creation
     ├── phase-2d-config.md        # Phase 2: Docker config
     ├── phase-2p-config.md        # Phase 2: Processor config
+    ├── phase-2w-config.md        # Phase 2: Widget config
     ├── phase-2i-config.md        # Phase 2: Integration config
     ├── phase-r-refs.md           # Phase R: Reference extraction (optional)
     ├── phase-3d-plan.md          # Phase 3: Docker planning
     ├── phase-3p-plan.md          # Phase 3: Processor planning
+    ├── phase-3w-build.md         # Phase 3: Widget build (minimal)
     ├── phase-3i-plan.md          # Phase 3: Integration planning
     ├── phase-4d-build.md         # Phase 4: Docker build
     ├── phase-4p-build.md         # Phase 4: Processor build
+    ├── phase-4w-check.md         # Phase 4: Widget validation
     ├── phase-4i-build.md         # Phase 4: Integration build
     ├── phase-5d-check.md         # Phase 5: Docker validation
     ├── phase-5p-check.md         # Phase 5: Processor validation
@@ -73,34 +76,45 @@ The `.appgen/PLAN.md` file (created in Phase 3) contains:
 | Phase | Name | Description |
 |-------|------|-------------|
 | 1 | Creation | Create the base Doover app using `doover app create` |
-| 2d/2p/2i | Config | Configure template based on app type |
+| 2d/2p/2w/2i | Config | Configure template based on app type |
 | R | References | Extract patterns from reference repositories (optional) |
 | 3d/3p/3i | Plan | Analyze requirements, resolve ambiguity, create PLAN.md |
+| 3w | Build | Widget build (minimal — template already scaffolded) |
 | 4d/4p/4i | Build | Generate application code from PLAN.md |
+| 4w | Check | Widget validation (build, imports, config) |
 | 5d/5p/5i | Check | Validate generated code |
 | 6 | Document | Generate comprehensive README.md documentation |
 
 Phase 2 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-2d-config.md
 - `processor` → phase-2p-config.md
+- `widget` → phase-2w-config.md
 - `integration` → phase-2i-config.md
 
 Phase 3 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-3d-plan.md
 - `processor` → phase-3p-plan.md
+- `widget` → phase-3w-build.md (minimal — template already scaffolded)
 - `integration` → phase-3i-plan.md
 
 Phase 4 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-4d-build.md
 - `processor` → phase-4p-build.md
+- `widget` → phase-4w-check.md (validation — no build phase needed)
 - `integration` → phase-4i-build.md
 
 Phase 5 variant is selected based on `app_type` from Phase 1:
 - `docker` → phase-5d-check.md
 - `processor` → phase-5p-check.md
+- `widget` → (skip — validation already done in Phase 4w)
 - `integration` → phase-5i-check.md
 
 Phase 6 is shared by all app types.
+
+**Widget app phase flow:** 1 → 2w → add-widget → 3w → 4w → 6
+
+After Phase 2w completes for widget apps, the orchestrator invokes the **add-widget skill** to scaffold the JavaScript widget side (clone template, rename, move folder, update doover_config.json with file_deployments/deployment_channel_messages, .gitignore, npm install). Any reference repos collected in Phase 1 are passed directly to the add-widget invocation (not through Phase R).
+Widget apps skip Phase R (references are handled by add-widget) and Phase 5 (validation is handled in Phase 4w).
 
 ## Phase Gating Protocol
 
@@ -202,8 +216,8 @@ Task tool with:
        - App name (kebab-case)
        - App description
        - GitHub repo path (org/repo-name)
-       - App type (docker, processor, or integration)
-       - Has UI (only for docker/processor - integrations never have UI)
+       - App type (docker, processor, widget, or integration)
+       - Has UI (only for docker/processor - widgets always have UI, integrations never have UI)
        - Reference repos (skip if references_from_prompt was provided)
     3. Run `doover app create` with the gathered parameters
     4. Run `gh repo create` to create and push to GitHub
@@ -220,6 +234,7 @@ Task tool with:
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 2 variant to use:
 - `docker` → use `phase-2d-config.md`
 - `processor` → use `phase-2p-config.md`
+- `widget` → use `phase-2w-config.md`
 - `integration` → use `phase-2i-config.md`
 
 ```
@@ -230,28 +245,104 @@ Task tool with:
 
     App directory: {app-dir}
     Skill location: {path-to-this-skill}
-    App type: {app_type}  # docker, processor, or integration
+    App type: {app_type}  # docker, processor, widget, or integration
 
     Instructions:
     1. Read {app-dir}/.appgen/PHASE.md to get app name, app type, and has_ui value
     2. Based on app type, read the appropriate phase instructions:
        - docker: {skill-path}/references/phase-2d-config.md
        - processor: {skill-path}/references/phase-2p-config.md
+       - widget: {skill-path}/references/phase-2w-config.md
        - integration: {skill-path}/references/phase-2i-config.md
     3. Follow the phase instructions to configure the template
-    4. If has_ui is false (or integration type), remove app_ui.py and UI-related code
-    5. Update {app-dir}/.appgen/PHASE.md with completion status
-    6. Return a summary including:
+    4. For docker/processor: if has_ui is false, remove app_ui.py and UI-related code
+    5. For widget: set up processor side only (per phase-2w instructions) — widget JS scaffolding is handled separately by add-widget
+    6. Update {app-dir}/.appgen/PHASE.md with completion status
+    7. Return a summary including:
        - Files modified
        - Configuration applied
+       - Name variants (PascalCase, kebab-case, snake_case) — needed for widget apps
+       - Any errors
+```
+
+**Add-Widget Invocation — Widget Apps Only:**
+
+After Phase 2w completes for widget apps, invoke the add-widget skill to scaffold and optionally customize the JavaScript widget side. This must run before Phase 3w.
+
+Read `app_type` from `{app-dir}/.appgen/PHASE.md`:
+- If `widget` → spawn add-widget subagent below
+- Otherwise → skip to Phase R check
+
+The widget name should match the app name. Read the name variants from PHASE.md (recorded by Phase 2w) and pass them to add-widget. Also read:
+- The app description from PHASE.md — to determine if widget customization is needed
+- The References section from PHASE.md — if references were provided, pass them to add-widget
+
+The add-widget skill is itself a phase-based orchestrator. It will run its own internal phases:
+- Phase 2 (Config): Scaffold widget boilerplate (clone template, rename, integrate)
+- Phase R (References): Extract JS/UI patterns from reference repos (if references provided)
+- Phase 3 (Plan): Plan widget JS implementation (if customization is needed)
+- Phase 4 (Build): Write widget JS component code (if plan was created)
+- Phase 5 (Check): Validate widget build
+
+**Note:** The add-widget skill will use `AskUserQuestion` to ask the user for a detailed widget description (Step 3 of add-widget). This is expected — widgets are visually bespoke and the appgen app description alone is not detailed enough to drive the widget's UI design. The app description is passed as context, but the user will be asked for additional specifics about visual layout, data display, controls, etc.
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute the add-widget skill to scaffold and build the JavaScript widget.
+
+    App directory: {app-dir}
+    Add-widget skill location: {path-to-this-skill}/../doover-add-widget
+    Widget PascalCase: {PascalCase}
+    Widget kebab-case: {kebab-case}
+    Widget snake_case: {snake_case}
+    Widget Title Case: {Title Case}
+    App description (from appgen): {app description from PHASE.md}
+
+    References (from Phase 1, if any):
+    {reference list from PHASE.md, or "none"}
+
+    Context: This is part of the appgen workflow. Phase 2w has already set up the
+    processor side (Python files, pyproject.toml, build.sh, doover_config.json base
+    structure). The add-widget skill now handles the entire JS widget side through
+    its own phase-based pipeline.
+
+    Instructions:
+    1. Read the add-widget skill: {add-widget-skill-path}/SKILL.md
+    2. The app directory and widget name are already known — skip Steps 1-2 of the
+       add-widget orchestrator.
+    3. Execute Step 3 (Gather Detailed Widget Description) — this ALWAYS runs.
+       Present the app description above as context, then ask the user for
+       detailed widget-specific information (visual layout, data display,
+       controls, interactions). Widgets are bespoke, so the general app
+       description is not enough.
+    4. Skip Step 4 (Gather References) — references are provided above.
+    5. Initialize WIDGET_PHASE.md (Step 6) with the provided details:
+       - Set widget name variants from above
+       - Set app description from above
+       - Set widget description from user's response to Step 3
+       - Set has_references based on whether references were provided
+       - Set needs_customization based on whether user provided a detailed description
+    6. Execute the add-widget phase pipeline (Step 7):
+       - Phase 2 (Config): Scaffold widget boilerplate
+       - Phase R (References): If references were provided
+       - Phase 3 (Plan) + Phase 4 (Build): If customization is needed
+       - Phase 5 (Check): Validate the build
+    7. Return a summary including:
+       - Widget directory created
+       - doover_config.json entries added (file_deployments, deployment_channel_messages)
+       - Whether widget was customized (Phases 3-4 ran)
+       - Validation results (Phase 5)
        - Any errors
 ```
 
 **Phase R Subagent Invocation (References) — Conditional:**
 
-After Phase 2 completes, read `has_references` from `{app-dir}/.appgen/PHASE.md`:
-- If `true` and Phase R is not yet completed → spawn Phase R subagent below
-- If `false` or Phase R already completed → skip directly to Phase 3
+After Phase 2 completes (and add-widget completes, for widget apps), read `has_references` and `app_type` from `{app-dir}/.appgen/PHASE.md`:
+- If `app_type` is `widget` → **skip Phase R entirely** (references were passed to add-widget instead)
+- If `has_references` is `true` and Phase R is not yet completed → spawn Phase R subagent below
+- If `has_references` is `false` or Phase R already completed → skip directly to Phase 3
 
 ```
 Task tool with:
@@ -280,7 +371,33 @@ Task tool with:
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 3 variant to use:
 - `docker` → use `phase-3d-plan.md`
 - `processor` → use `phase-3p-plan.md`
+- `widget` → use `phase-3w-build.md` (minimal — just confirms widget is scaffolded)
 - `integration` → use `phase-3i-plan.md`
+
+**For widget apps**, use this simplified invocation:
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 3 (Widget Build) of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+    App type: widget
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app name and path
+    2. Read {skill-path}/references/phase-3w-build.md
+    3. Confirm widget files exist (JS component, rsbuild config, processor application.py)
+    4. Update {app-dir}/.appgen/PHASE.md with completion status
+    5. Return a summary including:
+       - Widget component path
+       - Processor path
+       - Confirmation that scaffold is complete
+```
+
+**For docker/processor/integration apps**, use this invocation:
 
 ```
 Task tool with:
@@ -320,7 +437,38 @@ Task tool with:
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 4 variant to use:
 - `docker` → use `phase-4d-build.md`
 - `processor` → use `phase-4p-build.md`
+- `widget` → use `phase-4w-check.md` (validation, not build)
 - `integration` → use `phase-4i-build.md`
+
+**For widget apps**, use this validation invocation:
+
+```
+Task tool with:
+  subagent_type: "general-purpose"
+  prompt: |
+    Execute Phase 4 (Widget Check) of the doover-appgen skill.
+
+    App directory: {app-dir}
+    Skill location: {path-to-this-skill}
+    App type: widget
+
+    Instructions:
+    1. Read {app-dir}/.appgen/PHASE.md to get app name and path
+    2. Read {skill-path}/references/phase-4w-check.md
+    3. Run validation checks:
+       - Widget builds (npm run build) and built JS file exists
+       - Python imports work (application class can be imported)
+       - Config export works (uv run export-config)
+       - File structure is correct
+       - doover_config.json has correct structure
+    4. Update {app-dir}/.appgen/PHASE.md with validation results
+    5. Return a summary including:
+       - Checks passed
+       - Checks failed (with details)
+       - Recommended fixes (if any)
+```
+
+**For docker/processor/integration apps**, use this build invocation:
 
 ```
 Task tool with:
@@ -362,6 +510,7 @@ Task tool with:
 First, read the `app_type` from `{app-dir}/.appgen/PHASE.md` to determine which Phase 5 variant to use:
 - `docker` → use `phase-5d-check.md`
 - `processor` → use `phase-5p-check.md`
+- `widget` → **skip Phase 5** (validation already done in Phase 4w) — proceed directly to Phase 6
 - `integration` → use `phase-5i-check.md`
 
 ```

@@ -23,7 +23,10 @@
         "./skills/doover-data-management",
         "./skills/doover-admin",
         "./skills/pydoover",
-        "./skills/doover-app-explorer"
+        "./skills/doover-app-explorer",
+        "./skills/doover-appgen",
+        "./skills/doover-platform-docs",
+        "./skills/doover-add-widget"
       ]
     }
   ]

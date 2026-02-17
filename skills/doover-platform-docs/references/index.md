@@ -52,6 +52,13 @@ Reference documentation for Doover app development, organized by topic.
 |-------|------|----------|
 | Integration Features | `integration-features.md` | ingestion, endpoint, permission, extended, payload, parse, device routing, hmac, cidr, IngestionEndpointConfig, ExtendedPermissionsConfig |
 
+### Widget Apps
+
+| Chunk | File | Required | Keywords |
+|-------|------|----------|----------|
+| Widget Architecture | `widget-architecture.md` | **Yes** | widget, react, module federation, rsbuild, RemoteComponentWrapper, three-layer, PascalCase, kebab-case, snake_case, ConcatenatePlugin, tailwind, css, styling, cn |
+| Widget Hooks & Data | `widget-hooks.md` | **Yes** | useAgent, useAgentChannel, useChannelUpdateAggregate, useChannelSendMessage, useParams, useRemoteParams, dataProvider, aggregate, mutate, websocket, channel, permission, AGENT_PERMISSION |
+
 ## Chunk Selection Guide
 
 ### For Docker Apps
@@ -82,6 +89,19 @@ Reference documentation for Doover app development, organized by topic.
 
 **Include if relevant keywords found:**
 - `tags-channels.md` - if app uses tags
+- `doover-config.md` - if customizing app metadata
+
+### For Widget Apps
+
+**Always include:**
+- `widget-architecture.md`
+- `widget-hooks.md`
+- `config-schema.md`
+- `cloud-handler.md`
+- `cloud-project.md`
+
+**Include if relevant keywords found:**
+- `tags-channels.md` - if app uses tags or channels beyond the widget's own
 - `doover-config.md` - if customizing app metadata
 
 ### For Integration Apps

@@ -44,15 +44,21 @@ Use `AskUserQuestion` to collect required information:
 - Options:
   - **Docker App** - Device-based, runs in a Docker container on Doover devices
   - **Processor** - Cloud-based, event-triggered logic that runs serverless
+  - **Widget App** - Cloud-based processor with a custom JavaScript UI widget (React + Module Federation)
   - **Integration** - Cloud-based, receives data from external systems via HTTP endpoints
-- Store the selection as: `docker`, `processor`, or `integration`
+- Store the selection as: `docker`, `processor`, `widget`, or `integration`
 
 **Question 5: Should this app have a UI?** (conditional)
 - **Only ask if app_type is `docker` or `processor`**
-- **Skip this question for `integration`** (integrations never have UI)
+- **Skip this question for `integration`** (integrations never have UI) — automatically set `has_ui: false`
+- **Skip this question for `widget`** (widgets always have UI) — automatically set `has_ui: true`
 - Options: Yes, No
 - Store the selection as: `has_ui: true` or `has_ui: false`
-- For integrations, automatically set `has_ui: false` without asking
+
+Also store `ui_type` based on the app type and UI decision:
+- `widget` app_type → `ui_type: widget`
+- `docker` or `processor` with `has_ui: true` → `ui_type: platform`
+- All other cases → `ui_type: n/a`
 
 **Question 6: Reference Repositories** (optional)
 - **If references were already provided via the initial prompt** (the orchestrator will pass `references_from_prompt` in the subagent prompt): skip this question and write them directly into PHASE.md
@@ -163,8 +169,9 @@ completed
 ## App Details
 - **Name:** {app-name}
 - **Description:** {description}
-- **App Type:** {docker|processor|integration}
+- **App Type:** {docker|processor|widget|integration}
 - **Has UI:** {true|false}
+- **UI Type:** {widget|platform|n/a}
 - **Container Registry:** ghcr.io/getdoover
 - **Target Directory:** {full-path}
 - **GitHub Repo:** {org/repo-name}
@@ -189,8 +196,9 @@ completed
 - App name: {app-name}
 - Description: {description}
 - GitHub repo: {org/repo-name}
-- App type: {docker|processor|integration}
+- App type: {docker|processor|widget|integration}
 - Has UI: {true|false}
+- UI type: {widget|platform|n/a}
 - Has references: {true|false}
 - Icon URL: {icon-url}
 
