@@ -20,6 +20,7 @@ This is the entry point for Doover development. Use this index to understand ava
 | `doover-app-explorer` | Finding existing apps to integrate with |
 | `pydoover` | Python library API reference |
 | `doover-admin` | Platform administration |
+| `doover-rebase` | Cleaning up AI-generated code drift after solving a hard problem |
 
 ## App Types Summary
 
@@ -51,6 +52,9 @@ This is the entry point for Doover development. Use this index to understand ava
 
 **"I need CLI command help"**
 → Load `doover-cli` skill
+
+**"My code works but it's messy after a long debugging session"**
+→ Load `doover-rebase` skill (run in the same chat)
 
 ## Creating a New App - Quick Reference
 
